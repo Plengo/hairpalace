@@ -1,0 +1,18 @@
+# ─── terraform.tfvars.example ─────────────────────────────────────────────────
+# Copy to terraform.tfvars and fill in — NEVER commit terraform.tfvars
+# ─────────────────────────────────────────────────────────────────────────────
+
+aws_region    = "af-south-1"
+environment   = "staging"
+project       = "strands"
+
+ec2_ami_id        = "ami-XXXXXXXXXXXXXXXXX"   # Ubuntu 24.04 LTS in af-south-1
+ec2_instance_type = "t3.small"
+key_pair_name     = "strands-key"
+allowed_ssh_cidr  = "YOUR.STATIC.IP.ADDRESS/32"
+
+db_instance_class    = "db.t3.micro"
+db_allocated_storage = 20
+db_name              = "strands"
+db_username          = "strands_admin"
+db_password          = "CHANGE_ME_USE_SECRETS_MANAGER"

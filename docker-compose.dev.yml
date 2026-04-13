@@ -1,0 +1,39 @@
+version: "3.9"
+
+# Hot-reload overrides for local development
+
+networks:
+  strands_net:
+    driver: bridge
+
+services:
+
+  backend:
+    build:
+      context: ./services/backend
+      dockerfile: Dockerfile.dev
+    volumes:
+      - ./services/backend:/app
+    command: uvicorn app.main:app --host 0.0.0.0 --port 8000 --reload
+    ports:
+      - "8000:8000"         # expose directly for local dev & swagger
+
+  frontend:
+    build:
+      context: ./services/frontend
+      dockerfile: Dockerfile.dev
+    volumes:
+      - ./services/frontend:/app
+      - /app/node_modules   # preserve container node_modules
+      - /app/.next          # preserve .next build cache
+    command: npm run dev
+    ports:
+      - "3000:3000"         # expose directly for hot-module replacement
+
+  postgres:
+    ports:
+      - "5432:5432"         # expose for local DB tooling (DBeaver, etc.)
+
+  redis:
+    ports:
+      - "6379:6379"         # expose for local inspection
