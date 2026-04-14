@@ -2,6 +2,7 @@
 
 import { motion } from "framer-motion";
 import Link from "next/link";
+import HeroSlider from "@/components/HeroSlider";
 
 export default function HeroSection() {
   return (
@@ -76,36 +77,9 @@ export default function HeroSection() {
             </motion.div>
           </div>
 
-          {/* Right: coloured promo panels */}
-          <div className="hidden lg:flex lg:col-span-2 items-stretch gap-3 py-8">
-            {/* Tall panel */}
-            <div className="flex-1 rounded-2xl overflow-hidden relative bg-gradient-to-br from-brand-primary via-[#F04E6E] to-[#C82248]">
-              <div className="absolute inset-0 bg-[radial-gradient(circle_at_20%_80%,rgba(255,255,255,0.12),transparent)]" />
-              <div className="relative z-10 h-full flex flex-col justify-end p-6">
-                <span className="text-white/70 text-[10px] font-black tracking-widest uppercase mb-1">Hot Pick</span>
-                <p className="text-white font-extrabold text-xl leading-tight">Brazilian<br />Extensions</p>
-                <Link href="/products?category=hair_extensions" className="mt-3 inline-flex items-center gap-1 text-white/80 text-xs font-semibold hover:text-white transition-colors">
-                  Shop → 
-                </Link>
-              </div>
-            </div>
-            {/* Two stacked */}
-            <div className="flex-1 flex flex-col gap-3">
-              <div className="flex-1 rounded-2xl overflow-hidden relative bg-gradient-to-br from-brand-teal to-[#009480]">
-                <div className="absolute inset-0 bg-[radial-gradient(circle_at_80%_20%,rgba(255,255,255,0.15),transparent)]" />
-                <div className="relative z-10 h-full flex flex-col justify-end p-5">
-                  <span className="text-white/70 text-[10px] font-black tracking-widest uppercase mb-1">Trending</span>
-                  <p className="text-white font-extrabold text-lg leading-tight">Premium<br />Wigs</p>
-                </div>
-              </div>
-              <div className="flex-1 rounded-2xl overflow-hidden relative bg-gradient-to-br from-brand-orange to-[#E55A0F]">
-                <div className="absolute inset-0 bg-[radial-gradient(circle_at_80%_20%,rgba(255,255,255,0.15),transparent)]" />
-                <div className="relative z-10 h-full flex flex-col justify-end p-5">
-                  <span className="text-white/70 text-[10px] font-black tracking-widest uppercase mb-1">New In</span>
-                  <p className="text-white font-extrabold text-lg leading-tight">Hair<br />Care</p>
-                </div>
-              </div>
-            </div>
+          {/* Right: image slider */}
+          <div className="hidden lg:flex lg:col-span-2 items-stretch py-8">
+            <HeroSlider />
           </div>
 
         </div>
