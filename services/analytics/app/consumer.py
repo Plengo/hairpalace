@@ -12,7 +12,8 @@ from aiokafka import AIOKafkaConsumer
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.config import get_settings
-from app.database import Base, SessionLocal, _ensure_engine, engine
+import app.database as db_module
+from app.database import Base, SessionLocal, _ensure_engine
 from app.processors import inventory, orders, products, users
 
 logger = logging.getLogger("hairpalace.analytics.consumer")
@@ -43,7 +44,7 @@ async def consume() -> None:
     _ensure_engine()
 
     # Create analytics tables on startup
-    async with engine.begin() as conn:
+    async with db_module.engine.begin() as conn:
         await conn.run_sync(Base.metadata.create_all)
     logger.info("Analytics tables ready")
 
