@@ -3,8 +3,11 @@
 Thumbs.db
 
 # ─── Secrets & Environment ───────────────────────────────────────────────────
-.env
+# .env is a pure ${VAR} template — safe to commit
+.env.live
+.env.local
 .env.*
+!.env
 !.env.example
 .hairpalace
 *.pem
