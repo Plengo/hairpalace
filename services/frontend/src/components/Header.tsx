@@ -46,9 +46,11 @@ export default function Header() {
       <div className="bg-white border-b border-brand-border shadow-sm">
         <div className="max-w-7xl mx-auto px-4 h-16 flex items-center gap-4">
 
-          {/* Logo */}
+          {/* Logo — suppressHydrationWarning prevents mismatch noise from browser extensions (e.g. password managers) that modify img attributes client-side */}
           <Link href="/" className="shrink-0">
-            <Image src="/logo.png" alt="Hair Palace" width={160} height={64} className="h-16 w-auto object-contain" priority />
+            <div suppressHydrationWarning>
+              <Image src="/logo.png" alt="Hair Palace" width={160} height={64} className="h-16 w-auto object-contain" priority />
+            </div>
           </Link>
 
           {/* Search */}
