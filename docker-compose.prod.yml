@@ -1,0 +1,16 @@
+# Production overrides — layered on top of docker-compose.yml
+#
+# Usage:
+#   docker compose -f docker-compose.yml -f docker-compose.prod.yml up -d
+#
+# Key difference from dev:
+#   - nginx binds only to 127.0.0.1:3001 (host nginx terminates SSL and proxies here)
+#   - 443 is NOT exposed — host nginx handles TLS via Let's Encrypt
+#   - No source-code bind mounts; images are built from Dockerfiles
+
+version: "3.9"
+
+services:
+  nginx:
+    ports:
+      - "127.0.0.1:3001:80"
