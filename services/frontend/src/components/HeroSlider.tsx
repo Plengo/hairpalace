@@ -6,6 +6,8 @@ import Image from "next/image";
 const SLIDES = [
   { src: "/hero-1.png", alt: "Premium Hair Extensions" },
   { src: "/hero-2.png", alt: "Luxury Wigs Collection" },
+  { src: "/hero-3.png", alt: "Signature Hair Care" },
+  { src: "/hero-4.png", alt: "Exclusive Styles" },
 ];
 
 export default function HeroSlider() {
