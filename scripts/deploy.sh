@@ -2,13 +2,20 @@
 # ─────────────────────────────────────────────────────────────────────────────
 # Hair Palace — Deploy Script
 # ─────────────────────────────────────────────────────────────────────────────
-# Usage (local or on server after scp):
+# Run from your local machine:
 #   bash scripts/deploy.sh
 #
 # What it does:
-#   1. Sources .hairpalace  → exports all secrets to the shell
-#   2. Runs envsubst        → resolves .env template → .env.live (real values)
-#   3. Restarts containers  → docker compose picks up .env.live
+#   1. Sources .hairpalace locally  → loads secrets + SSH config
+#   2. scp .hairpalace → server     → copies secrets file to server
+#   3. ssh git pull                 → pulls latest code on server
+#   4. ssh --local                  → resolves .env.live + restarts containers
+#
+# SSH config (set in .hairpalace):
+#   SSH_HOST=156.155.250.65
+#   SSH_USER=root
+#   SSH_KEY=~/.ssh/hungu_rsa
+#   REMOTE_DIR=/root/hairpalace
 # ─────────────────────────────────────────────────────────────────────────────
 set -euo pipefail
 
@@ -19,29 +26,43 @@ SECRETS_FILE=".hairpalace"
 ENV_TEMPLATE=".env"
 ENV_LIVE=".env.live"
 
+# ── --local flag: runs entirely on the server ─────────────────────────────────
+if [[ "${1:-}" == "--local" ]]; then
+  echo "▶ [server] Loading secrets …"
+  set -a; source "$SECRETS_FILE"; set +a
+
+  if ! command -v envsubst &>/dev/null; then
+    apt-get install -y gettext-base >/dev/null
+  fi
+
+  echo "▶ [server] Resolving $ENV_TEMPLATE → $ENV_LIVE …"
+  envsubst < "$ENV_TEMPLATE" > "$ENV_LIVE"
+
+  echo "▶ [server] Restarting containers …"
+  docker compose --env-file "$ENV_LIVE" up -d --build --force-recreate --remove-orphans
+
+  echo "✓ Deploy complete"
+  docker compose ps
+  exit 0
+fi
+
+# ── Local: orchestrate the full remote deploy ─────────────────────────────────
 if [[ ! -f "$SECRETS_FILE" ]]; then
-  echo "✗ $SECRETS_FILE not found — copy it to $(pwd)/$SECRETS_FILE and retry"
+  echo "✗ $SECRETS_FILE not found in $(pwd)"
   exit 1
 fi
 
 echo "▶ Loading secrets from $SECRETS_FILE …"
-set -a
-# shellcheck source=../.hairpalace
-source "$SECRETS_FILE"
-set +a
+set -a; source "$SECRETS_FILE"; set +a
 
-echo "▶ Resolving $ENV_TEMPLATE → $ENV_LIVE …"
-if ! command -v envsubst &>/dev/null; then
-  echo "✗ envsubst not found — install gettext: apt install gettext-base"
-  exit 1
-fi
-envsubst < "$ENV_TEMPLATE" > "$ENV_LIVE"
+SSH_OPTS="-i ${SSH_KEY} -o StrictHostKeyChecking=no -o BatchMode=yes"
+REMOTE="${SSH_USER}@${SSH_HOST}"
 
-echo "▶ Pulling latest images …"
-docker compose pull --quiet 2>/dev/null || true
+echo "▶ Copying secrets to ${REMOTE}:${REMOTE_DIR} …"
+scp $SSH_OPTS "$SECRETS_FILE" "${REMOTE}:${REMOTE_DIR}/$SECRETS_FILE"
 
-echo "▶ Restarting containers …"
-docker compose --env-file "$ENV_LIVE" up -d --force-recreate --remove-orphans
+echo "▶ Pulling latest code on server …"
+ssh $SSH_OPTS "$REMOTE" "cd ${REMOTE_DIR} && git pull origin main"
 
-echo "✓ Done — all containers are up"
-docker compose ps
+echo "▶ Running remote deploy …"
+ssh $SSH_OPTS "$REMOTE" "cd ${REMOTE_DIR} && bash scripts/deploy.sh --local"
