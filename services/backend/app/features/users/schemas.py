@@ -38,3 +38,12 @@ class UserOut(BaseModel):
 class UserUpdateIn(BaseModel):
     full_name: str | None = Field(default=None, min_length=2, max_length=200)
     phone: str | None = Field(default=None, max_length=30)
+
+
+class PasswordResetRequestIn(BaseModel):
+    email: EmailStr
+
+
+class PasswordResetConfirmIn(BaseModel):
+    token: str
+    new_password: str = Field(..., min_length=8, max_length=128)

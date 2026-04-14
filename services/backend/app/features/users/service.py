@@ -1,17 +1,23 @@
 from fastapi import HTTPException, status
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from app.core.config import get_settings
 from app.core.security import (
     create_access_token,
+    create_password_reset_token,
     create_refresh_token,
+    decode_password_reset_token,
     decode_token,
     hash_password,
     verify_password,
 )
+from app.features.notifications.service import NotificationService
 from app.features.users.models import User
 from app.features.users.repository import UserRepository
 from app.features.users.schemas import (
     LoginIn,
+    PasswordResetConfirmIn,
+    PasswordResetRequestIn,
     RefreshIn,
     RegisterIn,
     TokenOut,
@@ -19,11 +25,14 @@ from app.features.users.schemas import (
     UserUpdateIn,
 )
 
+settings = get_settings()
+
 
 class UserService:
 
     def __init__(self, db: AsyncSession) -> None:
         self._repo = UserRepository(db)
+        self._notif = NotificationService()
 
     async def register(self, payload: RegisterIn) -> UserOut:
         existing = await self._repo.get_by_email(payload.email)
@@ -40,6 +49,7 @@ class UserService:
             phone=payload.phone,
         )
         user = await self._repo.create(user)
+        await self._notif.send_welcome_email(user.email, user.full_name)
         return UserOut.model_validate(user)
 
     async def login(self, payload: LoginIn) -> TokenOut:
@@ -87,3 +97,20 @@ class UserService:
 
         user = await self._repo.save(user)
         return UserOut.model_validate(user)
+
+    async def request_password_reset(self, payload: PasswordResetRequestIn) -> None:
+        user = await self._repo.get_by_email(payload.email)
+        if not user:
+            # Silent — prevents email enumeration
+            return
+        token = create_password_reset_token({"sub": str(user.id)})
+        reset_link = f"{settings.FRONTEND_URL}/auth/reset-password?token={token}"
+        await self._notif.send_password_reset_email(user.email, reset_link)
+
+    async def confirm_password_reset(self, payload: PasswordResetConfirmIn) -> None:
+        data = decode_password_reset_token(payload.token)
+        user = await self._repo.get_by_id(int(data["sub"]))
+        if not user:
+            raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Invalid token")
+        user.hashed_password = hash_password(payload.new_password)
+        await self._repo.save(user)

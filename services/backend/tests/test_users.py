@@ -93,3 +93,58 @@ async def test_register_invalid_email(client: AsyncClient) -> None:
         json={**VALID_USER, "email": "not-an-email"},
     )
     assert response.status_code == 422
+
+
+# ── Password reset ────────────────────────────────────────────────────────────
+
+@pytest.mark.asyncio
+async def test_password_reset_request_always_returns_202(client: AsyncClient) -> None:
+    """Returns 202 whether or not the email exists — prevents enumeration."""
+    response = await client.post(
+        f"{BASE}/password-reset/request",
+        json={"email": "nonexistent@example.com"},
+    )
+    assert response.status_code == 202
+
+
+@pytest.mark.asyncio
+async def test_password_reset_confirm_invalid_token(client: AsyncClient) -> None:
+    response = await client.post(
+        f"{BASE}/password-reset/confirm",
+        json={"token": "notavalidtoken", "new_password": "NewPassword123!"},
+    )
+    assert response.status_code == 400
+
+
+@pytest.mark.asyncio
+async def test_password_reset_full_flow(client: AsyncClient) -> None:
+    """Register → request reset → confirm with valid token → login with new password."""
+    from app.core.security import create_password_reset_token
+
+    # Register
+    reg = await client.post(f"{BASE}/register", json=VALID_USER)
+    user_id = reg.json()["id"]
+
+    # Generate a valid reset token the same way the service would
+    token = create_password_reset_token({"sub": str(user_id)})
+
+    # Confirm with new password
+    confirm = await client.post(
+        f"{BASE}/password-reset/confirm",
+        json={"token": token, "new_password": "BrandNewPass999!"},
+    )
+    assert confirm.status_code == 200
+
+    # Old password should no longer work
+    old_login = await client.post(
+        f"{BASE}/login",
+        json={"email": VALID_USER["email"], "password": VALID_USER["password"]},
+    )
+    assert old_login.status_code == 401
+
+    # New password should work
+    new_login = await client.post(
+        f"{BASE}/login",
+        json={"email": VALID_USER["email"], "password": "BrandNewPass999!"},
+    )
+    assert new_login.status_code == 200

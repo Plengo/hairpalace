@@ -94,7 +94,7 @@ services:
       context: ./services/analytics
       dockerfile: Dockerfile
     restart: unless-stopped
-    env_file: .env
+    env_file: .env.live
     depends_on:
       redpanda:
         condition: service_healthy
@@ -109,7 +109,7 @@ services:
       context: ./services/backend
       dockerfile: Dockerfile
     restart: unless-stopped
-    env_file: .env
+    env_file: .env.live
     depends_on:
       postgres:
         condition: service_healthy
@@ -128,7 +128,7 @@ services:
       context: ./services/frontend
       dockerfile: Dockerfile
     restart: unless-stopped
-    env_file: .env
+    env_file: .env.live
     depends_on:
       - backend
     networks:

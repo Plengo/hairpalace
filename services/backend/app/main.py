@@ -10,6 +10,7 @@ from app.core.config import get_settings
 from app.core.events import init_producer
 from app.core.middleware import AccessLogMiddleware, RequestIDMiddleware
 from app.features.admin.router import router as admin_router
+from app.features.contact.router import router as contact_router
 from app.features.products.router import router as products_router
 from app.features.orders.router import router as orders_router
 from app.features.users.router import router as users_router
@@ -57,6 +58,7 @@ app.include_router(users_router, prefix=PREFIX)
 app.include_router(products_router, prefix=PREFIX)
 app.include_router(orders_router, prefix=PREFIX)
 app.include_router(admin_router, prefix=PREFIX)
+app.include_router(contact_router, prefix=PREFIX)
 
 
 @app.get("/health", tags=["Health"], include_in_schema=False)

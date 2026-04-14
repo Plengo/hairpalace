@@ -28,10 +28,12 @@ class Settings(BaseSettings):
     # Email
     SMTP_HOST: str = ""
     SMTP_PORT: int = 587
+    SMTP_USE_SSL: bool = False
     SMTP_USER: str = ""
     SMTP_PASSWORD: str = ""
     EMAIL_FROM: str = "noreply@hairpalace.co.za"
     ADMIN_EMAIL: str = ""
+    FRONTEND_URL: str = "https://hairpalace.co.za"
 
     # Kafka / Redpanda
     KAFKA_BOOTSTRAP_SERVERS: str = "redpanda:9092"

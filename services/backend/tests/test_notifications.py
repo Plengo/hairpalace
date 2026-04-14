@@ -114,6 +114,7 @@ async def test_smtp_failure_does_not_raise() -> None:
         # Simulate a configured SMTP host so the send path is exercised
         mock_settings.SMTP_HOST = "smtp.example.com"
         mock_settings.SMTP_PORT = 587
+        mock_settings.SMTP_USE_SSL = False
         mock_settings.SMTP_USER = "user"
         mock_settings.SMTP_PASSWORD = "pass"
         mock_settings.EMAIL_FROM = "noreply@hairpalace.co.za"
@@ -142,3 +143,78 @@ async def test_order_with_multiple_items_in_admin_alert() -> None:
 
     # Should complete without raising
     await svc.alert_admin_new_order(order)
+
+
+# ── Welcome email ─────────────────────────────────────────────────────────────
+
+@pytest.mark.asyncio
+async def test_welcome_email_sent_to_new_user() -> None:
+    svc = NotificationService()
+    captured: dict = {}
+
+    def _capture(to: str, subject: str, html_body: str) -> None:
+        captured["to"] = to
+        captured["html"] = html_body
+
+    svc._send = _capture  # type: ignore[method-assign]
+    await svc.send_welcome_email("ada@example.com", "Ada Lovelace")
+
+    assert captured["to"] == "ada@example.com"
+    assert "Ada Lovelace" in captured["html"]
+
+
+@pytest.mark.asyncio
+async def test_welcome_email_subject_contains_brand() -> None:
+    svc = NotificationService()
+    captured: dict = {}
+
+    svc._send = lambda to, subject, html: captured.update({"subject": subject})  # type: ignore[method-assign]
+    await svc.send_welcome_email("x@x.com", "X")
+
+    assert "Hair Palace" in captured["subject"]
+
+
+# ── Password reset email ──────────────────────────────────────────────────────
+
+@pytest.mark.asyncio
+async def test_password_reset_email_contains_link() -> None:
+    svc = NotificationService()
+    captured: dict = {}
+
+    def _capture(to: str, subject: str, html_body: str) -> None:
+        captured["to"] = to
+        captured["html"] = html_body
+
+    svc._send = _capture  # type: ignore[method-assign]
+    await svc.send_password_reset_email(
+        "user@example.com",
+        "https://hairpalace.co.za/auth/reset-password?token=abc123",
+    )
+
+    assert captured["to"] == "user@example.com"
+    assert "abc123" in captured["html"]
+
+
+# ── Contact form emails ───────────────────────────────────────────────────────
+
+@pytest.mark.asyncio
+async def test_contact_admin_alert_contains_message() -> None:
+    svc = NotificationService()
+    captured: dict = {}
+
+    svc._send = lambda to, subject, html: captured.update({"html": html})  # type: ignore[method-assign]
+    await svc.alert_admin_contact("Jane", "jane@example.com", "I need help with my order.")
+
+    assert "I need help with my order." in captured["html"]
+    assert "Jane" in captured["html"]
+
+
+@pytest.mark.asyncio
+async def test_contact_auto_reply_sent_to_sender() -> None:
+    svc = NotificationService()
+    captured: dict = {}
+
+    svc._send = lambda to, subject, html: captured.update({"to": to})  # type: ignore[method-assign]
+    await svc.send_contact_auto_reply("jane@example.com", "Jane")
+
+    assert captured["to"] == "jane@example.com"

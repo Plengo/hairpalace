@@ -72,3 +72,28 @@ def require_admin(
     if not payload.get("is_admin"):
         raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Admin access required")
     return int(payload["sub"])
+
+
+# ── Password reset tokens (separate scope — cannot be used as auth tokens) ────
+
+def create_password_reset_token(payload: dict[str, Any]) -> str:
+    data = payload.copy()
+    data["scope"] = "password_reset"
+    data["exp"] = datetime.now(timezone.utc) + timedelta(minutes=30)
+    return jwt.encode(data, settings.JWT_SECRET, algorithm=settings.JWT_ALGORITHM)
+
+
+def decode_password_reset_token(token: str) -> dict[str, Any]:
+    try:
+        data = jwt.decode(token, settings.JWT_SECRET, algorithms=[settings.JWT_ALGORITHM])
+    except JWTError:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Invalid or expired reset token",
+        )
+    if data.get("scope") != "password_reset":
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Invalid token scope",
+        )
+    return data
