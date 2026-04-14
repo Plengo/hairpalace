@@ -143,8 +143,7 @@ services:
       dockerfile: Dockerfile
     restart: unless-stopped
     ports:
-      - "80:80"
-      - "443:443"
+      - "127.0.0.1:3001:80"
     depends_on:
       - frontend
       - backend
