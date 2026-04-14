@@ -1,3 +1,5 @@
+import hmac
+import hashlib
 import stripe
 from fastapi import APIRouter, Depends, Header, HTTPException, Query, Request, status
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -69,6 +71,87 @@ async def stripe_webhook(
 
     if event["type"] == "payment_intent.succeeded":
         await svc.confirm_payment(event["data"]["object"]["id"])
+
+    return {"received": True}
+
+
+# ── Yoco webhook ──────────────────────────────────────────────────────────────
+
+@router.post("/webhook/yoco", include_in_schema=False)
+async def yoco_webhook(
+    request: Request,
+    svc: OrderService = Depends(_service),
+) -> dict:
+    payload = await request.body()
+    signature = request.headers.get("X-Yoco-Signature", "")
+
+    if settings.YOCO_WEBHOOK_SECRET:
+        expected = hmac.new(
+            settings.YOCO_WEBHOOK_SECRET.encode(),
+            payload,
+            hashlib.sha256,
+        ).hexdigest()
+        if not hmac.compare_digest(expected, signature):
+            raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Invalid Yoco signature")
+
+    data = await request.json()
+    if data.get("type") in ("payment.succeeded", "checkout.complete"):
+        checkout_id = (
+            data.get("payload", {}).get("metadata", {}).get("orderId")
+            or data.get("payload", {}).get("checkoutId")
+        )
+        if checkout_id:
+            await svc.confirm_external_payment(checkout_id)
+
+    return {"received": True}
+
+
+# ── PayJustNow webhook (IPN) ──────────────────────────────────────────────────
+
+@router.post("/webhook/payjustnow", include_in_schema=False)
+async def payjustnow_webhook(
+    request: Request,
+    svc: OrderService = Depends(_service),
+) -> dict:
+    data = await request.json()
+    # PJN sends orderId and status in the IPN body
+    if data.get("status") in ("approved", "APPROVED", "COMPLETE"):
+        order_id = data.get("orderId") or data.get("id")
+        if order_id:
+            await svc.confirm_external_payment(str(order_id))
+
+    return {"received": True}
+
+
+# ── Payflex callback ──────────────────────────────────────────────────────────
+# Payflex redirects the customer back to redirectConfirmUrl with orderToken + status
+# The frontend hits this endpoint to confirm the payment server-side
+
+@router.post("/payment/payflex/confirm", include_in_schema=False)
+async def payflex_confirm(
+    request: Request,
+    svc: OrderService = Depends(_service),
+) -> dict:
+    data = await request.json()
+    order_token = data.get("orderToken")
+    payflex_status = data.get("status", "")
+    if payflex_status.upper() == "APPROVED" and order_token:
+        await svc.confirm_external_payment(order_token)
+    return {"received": True}
+
+
+# ── HappyPay webhook ──────────────────────────────────────────────────────────
+
+@router.post("/webhook/happypay", include_in_schema=False)
+async def happypay_webhook(
+    request: Request,
+    svc: OrderService = Depends(_service),
+) -> dict:
+    data = await request.json()
+    if data.get("status") in ("PAID", "APPROVED", "SUCCESS"):
+        checkout_id = data.get("checkoutId") or data.get("id")
+        if checkout_id:
+            await svc.confirm_external_payment(str(checkout_id))
 
     return {"received": True}
 

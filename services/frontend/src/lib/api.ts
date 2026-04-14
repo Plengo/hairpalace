@@ -125,9 +125,12 @@ export interface ShippingAddress {
   postal_code: string;
 }
 
+export type PaymentProvider = "stripe" | "yoco" | "payjustnow" | "payflex" | "happypay";
+
 export interface CreateOrderPayload {
   items: CartItem[];
   shipping: ShippingAddress;
+  payment_provider: PaymentProvider;
 }
 
 export type OrderStatus =
@@ -146,6 +149,7 @@ export interface Order {
   id: number;
   reference: string;
   status: OrderStatus;
+  payment_provider: PaymentProvider;
   subtotal: string;
   shipping_fee: string;
   total: string;
@@ -162,7 +166,9 @@ export interface Order {
 
 export interface OrderCreatedResponse {
   order: Order;
-  client_secret: string;
+  payment_provider: string;
+  client_secret: string | null;  // Stripe only
+  checkout_url: string | null;   // All other providers
 }
 
 export interface OrderListResponse {

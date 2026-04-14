@@ -25,6 +25,22 @@ class Settings(BaseSettings):
     STRIPE_PUBLISHABLE_KEY: str
     STRIPE_WEBHOOK_SECRET: str
 
+    # Yoco (South African payment gateway)
+    YOCO_SECRET_KEY: str = ""
+    YOCO_WEBHOOK_SECRET: str = ""
+
+    # PayJustNow (SA BNPL — 3 equal interest-free payments)
+    PJN_API_KEY: str = ""
+    PJN_WEBHOOK_SECRET: str = ""
+
+    # Payflex (SA BNPL — 4 payments over 6 weeks)
+    PAYFLEX_SECRET: str = ""
+    PAYFLEX_WEBHOOK_SECRET: str = ""
+
+    # HappyPay (SA instalment payments)
+    HAPPYPAY_API_KEY: str = ""
+    HAPPYPAY_WEBHOOK_SECRET: str = ""
+
     # Email
     SMTP_HOST: str = ""
     SMTP_PORT: int = 587
@@ -34,6 +50,7 @@ class Settings(BaseSettings):
     EMAIL_FROM: str = "noreply@hairpalace.co.za"
     ADMIN_EMAIL: str = ""
     FRONTEND_URL: str = "https://hairpalace.co.za"
+    BACKEND_URL: str = "https://hairpalace.co.za"
 
     # Kafka / Redpanda
     KAFKA_BOOTSTRAP_SERVERS: str = "redpanda:9092"

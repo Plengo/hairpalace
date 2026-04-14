@@ -9,7 +9,7 @@ from app.core.database import Base
 
 
 class OrderStatus(str, enum.Enum):
-    PENDING_PAYMENT = "pending_payment"   # awaiting Stripe confirmation
+    PENDING_PAYMENT = "pending_payment"   # awaiting payment confirmation
     PAID = "paid"                          # payment confirmed — triggers sourcing
     SOURCING = "sourcing"                  # owner is buying stock
     PROCESSING = "processing"             # stock acquired, preparing to ship
@@ -17,6 +17,14 @@ class OrderStatus(str, enum.Enum):
     DELIVERED = "delivered"               # completed
     CANCELLED = "cancelled"
     REFUNDED = "refunded"
+
+
+class PaymentProvider(str, enum.Enum):
+    STRIPE = "stripe"
+    YOCO = "yoco"
+    PAYJUSTNOW = "payjustnow"
+    PAYFLEX = "payflex"
+    HAPPYPAY = "happypay"
 
 
 class Order(Base):
@@ -32,8 +40,15 @@ class Order(Base):
         Enum(OrderStatus), default=OrderStatus.PENDING_PAYMENT, nullable=False
     )
 
+    payment_provider: Mapped[PaymentProvider] = mapped_column(
+        Enum(PaymentProvider), default=PaymentProvider.STRIPE, nullable=False
+    )
+
     # Stripe payment intent ID — used to confirm/capture
     stripe_payment_intent_id: Mapped[str | None] = mapped_column(String(100))
+
+    # Generic external payment ID — stores checkout ID from Yoco, PJN, Payflex, HappyPay
+    external_payment_id: Mapped[str | None] = mapped_column(String(200))
 
     subtotal: Mapped[Decimal] = mapped_column(Numeric(10, 2), nullable=False)
     shipping_fee: Mapped[Decimal] = mapped_column(Numeric(10, 2), default=Decimal("0.00"))

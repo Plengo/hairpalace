@@ -3,7 +3,7 @@ from decimal import Decimal
 
 from pydantic import BaseModel, ConfigDict, Field
 
-from app.features.orders.models import OrderStatus
+from app.features.orders.models import OrderStatus, PaymentProvider
 
 
 class CartItemIn(BaseModel):
@@ -22,6 +22,7 @@ class ShippingAddressIn(BaseModel):
 class OrderCreateIn(BaseModel):
     items: list[CartItemIn] = Field(..., min_length=1)
     shipping: ShippingAddressIn
+    payment_provider: PaymentProvider = PaymentProvider.STRIPE
 
 
 class OrderItemOut(BaseModel):
@@ -40,6 +41,7 @@ class OrderOut(BaseModel):
     id: int
     reference: str
     status: OrderStatus
+    payment_provider: PaymentProvider
     subtotal: Decimal
     shipping_fee: Decimal
     total: Decimal
@@ -56,7 +58,11 @@ class OrderOut(BaseModel):
 
 class OrderCreatedOut(BaseModel):
     order: OrderOut
-    client_secret: str   # Stripe PaymentIntent client_secret → passed to frontend
+    payment_provider: str
+    # Stripe: pass to Stripe Elements on the frontend
+    client_secret: str | None = None
+    # All other providers: redirect the browser here to complete payment
+    checkout_url: str | None = None
 
 
 class AdminOrderUpdate(BaseModel):
