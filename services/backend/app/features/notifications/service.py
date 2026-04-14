@@ -9,7 +9,7 @@ from email.mime.text import MIMEText
 
 from app.core.config import get_settings
 
-logger = logging.getLogger("strands.notifications")
+logger = logging.getLogger("hairpalace.notifications")
 settings = get_settings()
 
 
@@ -38,7 +38,7 @@ class NotificationService:
             logger.exception("Email send failed: %s", exc)
 
     async def send_order_confirmation(self, order) -> None:
-        subject = f"Order Confirmed — {order.reference} | STRANDS"
+        subject = f"Order Confirmed — {order.reference} | Hair Palace"
         html = f"""
         <div style="font-family:sans-serif;max-width:600px;margin:0 auto">
           <h2 style="color:#C9A96E">Your order is confirmed</h2>
@@ -49,7 +49,7 @@ class NotificationService:
              for preparation before dispatch.</p>
           <p>We'll notify you as soon as your order ships.</p>
           <hr/>
-          <p style="color:#888;font-size:12px">STRANDS · Premium Hair &amp; Beauty</p>
+          <p style="color:#888;font-size:12px">Hair Palace &middot; Premium Hair</p>
         </div>
         """
         self._send(order.user.email if hasattr(order, "user") else settings.ADMIN_EMAIL, subject, html)
@@ -82,13 +82,13 @@ class NotificationService:
             "delivered": f"Your order {order.reference} has been delivered. Enjoy! 🖤",
         }
         message = status_messages.get(order.status.value, f"Order {order.reference} updated.")
-        subject = f"Order Update — {order.reference} | STRANDS"
+        subject = f"Order Update — {order.reference} | Hair Palace"
         html = f"""
         <div style="font-family:sans-serif;max-width:600px;margin:0 auto">
           <h2 style="color:#C9A96E">Order Update</h2>
           <p>{message}</p>
           <hr/>
-          <p style="color:#888;font-size:12px">STRANDS · Premium Hair &amp; Beauty</p>
+          <p style="color:#888;font-size:12px">Hair Palace &middot; Premium Hair</p>
         </div>
         """
         email = getattr(getattr(order, "user", None), "email", settings.ADMIN_EMAIL)

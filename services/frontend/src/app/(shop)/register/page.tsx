@@ -32,7 +32,7 @@ export default function RegisterPage() {
       <div className="w-full max-w-md space-y-8">
         <div className="text-center">
           <Link href="/" className="font-serif text-3xl tracking-[0.2em] text-brand-cream hover:text-brand-gold transition-colors">
-            STRANDS
+            HAIR PALACE
           </Link>
           <p className="mt-3 text-sm text-brand-muted">Create your account</p>
         </div>

@@ -28,8 +28,9 @@ class Product(Base):
     is_active: Mapped[bool] = mapped_column(Boolean, default=True)
     is_featured: Mapped[bool] = mapped_column(Boolean, default=False)
 
-    # Sourcing disclaimer — shown at checkout (order-first model)
+    # Order-first stock tracking — 0 means source-on-demand
     lead_time_days: Mapped[int] = mapped_column(Integer, default=3)
+    stock_quantity: Mapped[int] = mapped_column(Integer, default=0, nullable=False)
 
     images: Mapped[list["ProductImage"]] = relationship(
         back_populates="product", cascade="all, delete-orphan", lazy="selectin"

@@ -9,8 +9,8 @@ export default function TermsPage() {
 
       {[
         {
-          title: "1. About STRANDS",
-          body: "STRANDS is an order-first hair and beauty retailer registered in South Africa. We accept orders, collect payment, source your products from verified suppliers, and deliver to your door. By placing an order you agree to these terms.",
+          title: "1. About Hair Palace",
+          body: "Hair Palace is an order-first hair and beauty retailer registered in South Africa. We accept orders, collect payment, source your products from verified suppliers, and deliver to your door. By placing an order you agree to these terms.",
         },
         {
           title: "2. Order Process",
@@ -30,11 +30,11 @@ export default function TermsPage() {
         },
         {
           title: "6. Intellectual Property",
-          body: "All content on this website including text, images, logos, and product descriptions is the property of STRANDS and may not be reproduced without written consent.",
+          body: "All content on this website including text, images, logos, and product descriptions is the property of Hair Palace and may not be reproduced without written consent.",
         },
         {
           title: "7. Limitation of Liability",
-          body: "To the maximum extent permitted by South African law, STRANDS shall not be liable for any indirect, incidental, or consequential damages arising from the use of our service.",
+          body: "To the maximum extent permitted by South African law, Hair Palace shall not be liable for any indirect, incidental, or consequential damages arising from the use of our service.",
         },
         {
           title: "8. Governing Law",

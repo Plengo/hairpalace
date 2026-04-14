@@ -7,7 +7,7 @@ export default function ShopLayout({ children }: { children: React.ReactNode }) 
     <>
       <Header />
       <CartDrawer />
-      <main className="pt-16 min-h-screen">{children}</main>
+      <main className="pt-36 min-h-screen bg-brand-bg">{children}</main>
       <Footer />
     </>
   );

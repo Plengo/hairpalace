@@ -7,6 +7,7 @@ from fastapi import HTTPException, status
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.config import get_settings
+from app.core.events import Event, TOPIC_ORDERS, get_producer
 from app.features.orders.models import Order, OrderItem, OrderStatus
 from app.features.orders.repository import OrderRepository
 from app.features.orders.schemas import (
@@ -25,9 +26,15 @@ stripe.api_key = settings.STRIPE_SECRET_KEY
 SHIPPING_FEE = Decimal("80.00")   # flat-rate — adjust as needed
 
 
+async def _emit_order(event: Event) -> None:
+    producer = get_producer()
+    if producer:
+        await producer.emit(TOPIC_ORDERS, event, key=str(event.entity_id))
+
+
 def _generate_reference() -> str:
-    """Short, human-readable order reference: STR-XXXXXX."""
-    return "STR-" + "".join(random.choices(string.ascii_uppercase + string.digits, k=6))
+    """Short, human-readable order reference: HP-XXXXXX."""
+    return "HP-" + "".join(random.choices(string.ascii_uppercase + string.digits, k=6))
 
 
 class OrderService:
@@ -89,8 +96,28 @@ class OrderService:
                 )
             )
 
+        # Flush items so they receive DB-assigned IDs, then refresh the relationship
+        order = await self._repo.save(order)
+
+        out = OrderOut.model_validate(order)
+        await _emit_order(
+            Event(
+                event_type="order.created",
+                entity_type="order",
+                entity_id=order.id,
+                actor_id=user_id,
+                actor_type="customer",
+                payload={
+                    "reference": order.reference,
+                    "status": order.status.value,
+                    "total": str(order.total),
+                    "item_count": len(order.items),
+                    "shipping_city": order.shipping_city,
+                },
+            )
+        )
         return OrderCreatedOut(
-            order=OrderOut.model_validate(order),
+            order=out,
             client_secret=intent.client_secret,
         )
 
@@ -144,10 +171,28 @@ class OrderService:
         if not order:
             raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Order not found")
 
+        status_before = order.status
         for field, value in payload.model_dump(exclude_unset=True).items():
             setattr(order, field, value)
 
         order = await self._repo.save(order)
+
+        # Emit status change event if status changed
+        if payload.status and payload.status != status_before:
+            await _emit_order(
+                Event(
+                    event_type="order.status_changed",
+                    entity_type="order",
+                    entity_id=order.id,
+                    actor_type="admin",
+                    payload={
+                        "reference": order.reference,
+                        "status_from": status_before.value,
+                        "status_to": order.status.value,
+                        "total": str(order.total),
+                    },
+                )
+            )
 
         # Notify customer on status transitions they care about
         if payload.status in {OrderStatus.SHIPPED, OrderStatus.DELIVERED}:

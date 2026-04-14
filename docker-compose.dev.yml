@@ -18,6 +18,15 @@ services:
     ports:
       - "8000:8000"         # expose directly for local dev & swagger
 
+  redpanda:
+    ports:
+      - "19092:19092"       # Kafka API (external — connect from host with localhost:19092)
+      - "9644:9644"         # Redpanda admin API
+
+  analytics_db:
+    ports:
+      - "5433:5432"         # Analytics postgres (separate from operational on 5432)
+
   frontend:
     build:
       context: ./services/frontend

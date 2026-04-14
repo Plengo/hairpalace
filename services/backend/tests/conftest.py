@@ -1,7 +1,9 @@
 """
 Shared pytest fixtures — AsyncSession, test client, factory helpers.
+Uses the Docker postgres container via TEST_DATABASE_URL env var.
 """
 import asyncio
+import os
 from typing import AsyncGenerator
 
 import pytest
@@ -12,7 +14,8 @@ from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker, create_asyn
 from app.core.database import Base, get_db
 from app.main import app
 
-TEST_DATABASE_URL = "sqlite+aiosqlite:///:memory:"
+# Reads from env — set in docker-compose / Makefile / CI
+TEST_DATABASE_URL = os.environ["TEST_DATABASE_URL"]
 
 engine = create_async_engine(TEST_DATABASE_URL, echo=False)
 TestSession = async_sessionmaker(engine, class_=AsyncSession, expire_on_commit=False)

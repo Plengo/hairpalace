@@ -4,7 +4,14 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from app.core.database import get_db
 from app.core.security import require_admin
 from app.features.products.models import ProductCategory
-from app.features.products.schemas import ProductCreate, ProductListOut, ProductOut, ProductUpdate
+from app.features.products.schemas import (
+    ProductCreate,
+    ProductListOut,
+    ProductOut,
+    ProductUpdate,
+    StockAdjustIn,
+    StockAdjustOut,
+)
 from app.features.products.service import ProductService
 
 router = APIRouter(prefix="/products", tags=["Products"])
@@ -35,17 +42,38 @@ async def get_product(slug: str, svc: ProductService = Depends(_service)) -> Pro
 @router.post("", response_model=ProductOut, status_code=201)
 async def create_product(
     payload: ProductCreate,
-    _admin: int = Depends(require_admin),
+    admin_id: int = Depends(require_admin),
     svc: ProductService = Depends(_service),
 ) -> ProductOut:
-    return await svc.create_product(payload)
+    return await svc.create_product(payload, actor_id=admin_id)
 
 
 @router.patch("/{product_id}", response_model=ProductOut)
 async def update_product(
     product_id: int,
     payload: ProductUpdate,
-    _admin: int = Depends(require_admin),
+    admin_id: int = Depends(require_admin),
     svc: ProductService = Depends(_service),
 ) -> ProductOut:
-    return await svc.update_product(product_id, payload)
+    return await svc.update_product(product_id, payload, actor_id=admin_id)
+
+
+@router.patch("/{product_id}/stock", response_model=StockAdjustOut)
+async def adjust_stock(
+    product_id: int,
+    payload: StockAdjustIn,
+    admin_id: int = Depends(require_admin),
+    svc: ProductService = Depends(_service),
+) -> StockAdjustOut:
+    return await svc.adjust_stock(
+        product_id, payload.delta, payload.reason, actor_id=admin_id
+    )
+
+
+@router.delete("/{product_id}", response_model=ProductOut)
+async def soft_delete_product(
+    product_id: int,
+    admin_id: int = Depends(require_admin),
+    svc: ProductService = Depends(_service),
+) -> ProductOut:
+    return await svc.soft_delete(product_id, actor_id=admin_id)

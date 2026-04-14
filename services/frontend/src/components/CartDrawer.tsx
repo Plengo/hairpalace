@@ -34,10 +34,10 @@ export default function CartDrawer() {
             {/* Header */}
             <div className="flex items-center justify-between px-6 py-5 border-b border-brand-border">
               <div className="flex items-center gap-3">
-                <ShoppingBag size={18} strokeWidth={1.5} className="text-brand-gold" />
-                <h2 className="font-serif text-lg tracking-wider">Your Bag</h2>
+                <ShoppingBag size={18} strokeWidth={1.5} className="text-brand-primary" />
+                <h2 className="font-bold text-lg tracking-wide">Your Bag</h2>
               </div>
-              <button onClick={closeCart} className="p-1.5 text-brand-muted hover:text-brand-cream transition-colors">
+              <button onClick={closeCart} className="p-1.5 text-brand-muted hover:text-brand-text transition-colors">
                 <X size={18} />
               </button>
             </div>
@@ -65,7 +65,7 @@ export default function CartDrawer() {
                         )}
                         <div className="flex-1 flex flex-col justify-between">
                           <div>
-                            <p className="text-sm font-serif text-brand-cream line-clamp-2">{entry.product.name}</p>
+                            <p className="text-sm font-semibold text-brand-text line-clamp-2">{entry.product.name}</p>
                             <p className="text-xs text-brand-muted mt-1">{formatZAR(entry.product.price)} each</p>
                           </div>
                           <div className="flex items-center justify-between">
@@ -73,16 +73,16 @@ export default function CartDrawer() {
                             <div className="flex items-center border border-brand-border">
                               <button
                                 onClick={() => updateQty(entry.product.id, entry.quantity - 1)}
-                                className="w-7 h-7 flex items-center justify-center text-brand-muted hover:text-brand-cream"
+                                className="w-7 h-7 flex items-center justify-center text-brand-muted hover:text-brand-text"
                               >−</button>
                               <span className="w-7 text-center text-sm">{entry.quantity}</span>
                               <button
                                 onClick={() => updateQty(entry.product.id, entry.quantity + 1)}
-                                className="w-7 h-7 flex items-center justify-center text-brand-muted hover:text-brand-cream"
+                                className="w-7 h-7 flex items-center justify-center text-brand-muted hover:text-brand-text"
                               >+</button>
                             </div>
                             <div className="flex items-center gap-3">
-                              <span className="text-sm font-serif text-brand-gold">
+                              <span className="text-sm font-bold text-brand-primary">
                                 {formatZAR(parseFloat(entry.product.price) * entry.quantity)}
                               </span>
                               <button
@@ -106,7 +106,7 @@ export default function CartDrawer() {
               <div className="px-6 py-6 border-t border-brand-border space-y-4">
                 <div className="flex justify-between text-sm">
                   <span className="text-brand-muted tracking-wide">Subtotal</span>
-                  <span className="font-serif text-brand-cream">{formatZAR(total())}</span>
+                  <span className="font-bold text-brand-text">{formatZAR(total())}</span>
                 </div>
                 <p className="text-[11px] text-brand-muted leading-relaxed">
                   + R80 flat-rate shipping. Orders are sourced on demand — allow 3–5 business days for preparation.
@@ -114,7 +114,7 @@ export default function CartDrawer() {
                 <Link
                   href="/checkout"
                   onClick={closeCart}
-                  className="block w-full py-3.5 bg-brand-gold text-brand-black text-sm font-semibold tracking-widest uppercase text-center hover:bg-brand-cream transition-colors"
+                  className="block w-full py-3.5 bg-brand-primary text-white text-sm font-bold tracking-wide rounded-xl text-center hover:opacity-90 transition-opacity shadow-md shadow-brand-primary/20"
                 >
                   Proceed to Checkout
                 </Link>

@@ -40,8 +40,8 @@ seed: ## Seed the database with sample data
 
 # ─── Quality Gates (must pass before any push) ───────────────────────────────
 
-test: ## Run full Pytest suite
-	docker compose exec backend pytest tests/ -v --cov=app --cov-report=term-missing
+test: ## Run full Pytest suite (against Docker postgres strands_test DB)
+	docker compose exec -e TEST_DATABASE_URL=postgresql+asyncpg://$$POSTGRES_USER:$$POSTGRES_PASSWORD@postgres:5432/strands_test backend pytest tests/ -v --cov=app --cov-report=term-missing
 
 lint: ## Lint & format backend
 	docker compose exec backend ruff check app/ tests/

@@ -1,7 +1,8 @@
 from sqlalchemy import select, func
+from sqlalchemy.orm import selectinload
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from app.features.products.models import Product, ProductCategory
+from app.features.products.models import Product, ProductImage, ProductCategory
 
 
 class ProductRepository:
@@ -9,15 +10,22 @@ class ProductRepository:
     def __init__(self, db: AsyncSession) -> None:
         self._db = db
 
-    async def get_by_id(self, product_id: int) -> Product | None:
-        result = await self._db.execute(
-            select(Product).where(Product.id == product_id, Product.is_active == True)  # noqa: E712
+    async def get_by_id(self, product_id: int, active_only: bool = True) -> Product | None:
+        q = (
+            select(Product)
+            .options(selectinload(Product.images))
+            .where(Product.id == product_id)
         )
+        if active_only:
+            q = q.where(Product.is_active == True)  # noqa: E712
+        result = await self._db.execute(q)
         return result.scalar_one_or_none()
 
     async def get_by_slug(self, slug: str) -> Product | None:
         result = await self._db.execute(
-            select(Product).where(Product.slug == slug, Product.is_active == True)  # noqa: E712
+            select(Product)
+            .options(selectinload(Product.images))
+            .where(Product.slug == slug, Product.is_active == True)  # noqa: E712
         )
         return result.scalar_one_or_none()
 
@@ -28,8 +36,11 @@ class ProductRepository:
         page_size: int = 20,
         category: ProductCategory | None = None,
         featured_only: bool = False,
+        active_only: bool = True,
     ) -> tuple[list[Product], int]:
-        query = select(Product).where(Product.is_active == True)  # noqa: E712
+        query = select(Product).options(selectinload(Product.images))
+        if active_only:
+            query = query.where(Product.is_active == True)  # noqa: E712
 
         if category:
             query = query.where(Product.category == category)
@@ -46,8 +57,11 @@ class ProductRepository:
     async def create(self, product: Product) -> Product:
         self._db.add(product)
         await self._db.flush()
+        # Eagerly load images so model_validate doesn't trigger async IO synchronously
+        await self._db.refresh(product, attribute_names=["images"])
         return product
 
     async def save(self, product: Product) -> Product:
         await self._db.flush()
+        await self._db.refresh(product, attribute_names=["images"])
         return product

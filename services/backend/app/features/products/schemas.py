@@ -23,6 +23,7 @@ class ProductOut(BaseModel):
     description: str | None
     category: ProductCategory
     price: Decimal
+    stock_quantity: int
     is_active: bool
     is_featured: bool
     lead_time_days: int
@@ -34,6 +35,7 @@ class ProductCreate(BaseModel):
     description: str | None = None
     category: ProductCategory
     price: Decimal = Field(..., gt=0, decimal_places=2)
+    stock_quantity: int = Field(default=0, ge=0)
     is_featured: bool = False
     lead_time_days: int = Field(default=3, ge=1, le=30)
 
@@ -43,9 +45,22 @@ class ProductUpdate(BaseModel):
     description: str | None = None
     category: ProductCategory | None = None
     price: Decimal | None = Field(default=None, gt=0, decimal_places=2)
+    stock_quantity: int | None = Field(default=None, ge=0)
     is_active: bool | None = None
     is_featured: bool | None = None
     lead_time_days: int | None = Field(default=None, ge=1, le=30)
+
+
+class StockAdjustIn(BaseModel):
+    """Delta-based stock adjustment — positive adds, negative reduces."""
+    delta: int = Field(..., description="Units to add (positive) or remove (negative)")
+    reason: str = Field(..., min_length=3, max_length=200)
+
+
+class StockAdjustOut(BaseModel):
+    model_config = ConfigDict(from_attributes=True)
+    id: int
+    stock_quantity: int
 
 
 class ProductListOut(BaseModel):
